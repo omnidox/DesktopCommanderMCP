@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "desktop-commander": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@wonderwhy-er/desktop-commander"
+      ]
+    },
+    "server-sequential-thinking": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery-ai/server-sequential-thinking",
+        "--key",
+        "7676fbdc-9953-4276-95c1-e9b2b1884b38"
+      ]
+    },
+    "document-edit": {
+      "command": "C:\\Users\\ashle\\document-edit-mcp\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "claude_document_mcp.server"
+      ],
+      "cwd": "C:\\Users\\ashle\\document-edit-mcp",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

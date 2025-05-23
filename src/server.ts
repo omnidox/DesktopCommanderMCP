@@ -132,8 +132,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                         Can fetch content from URLs when isUrl parameter is set to true
                         (URLs are always read in full regardless of offset/length).
                         
-                        Handles text files normally and image files are returned as viewable images.
+                        Handles text files normally, image files are returned as viewable images,
+                        and Microsoft Word documents (.docx) are converted to plain text.
                         Recognized image types: PNG, JPEG, GIF, WebP.
+                        Recognized document types: Microsoft Word (.docx).
                         
                         ${PATH_GUIDANCE}
                         ${CMD_PREFIX_DESCRIPTION}`,
@@ -145,8 +147,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                         Read the contents of multiple files simultaneously.
                         
                         Each file's content is returned with its path as a reference.
-                        Handles text files normally and renders images as viewable content.
+                        Handles text files normally, renders images as viewable content,
+                        and converts Microsoft Word documents (.docx) to plain text.
                         Recognized image types: PNG, JPEG, GIF, WebP.
+                        Recognized document types: Microsoft Word (.docx).
                         
                         Failed reads for individual files won't stop the entire operation.
                         Only works within allowed directories.

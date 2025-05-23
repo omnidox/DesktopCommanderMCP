@@ -1,0 +1,7 @@
+This is a test document with multiple lines.
+
+Line 2: Testing Word document reading functionality.
+Line 3: This should work with the new mammoth integration.
+Line 4: The offset and length parameters should also work.
+
+Line 6: This is the final line for testing.

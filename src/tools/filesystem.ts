@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import os from 'os';
 import fetch from 'cross-fetch';
+import mammoth from 'mammoth';
 import {capture} from '../utils/capture.js';
 import {withTimeout} from '../utils/withTimeout.js';
 import {configManager} from '../config-manager.js';
@@ -295,6 +296,7 @@ export async function readFileFromDisk(filePath: string, offset: number = 0, len
     // Detect the MIME type based on file extension
     const mimeType = getMimeType(validPath);
     const isImage = isImageFile(mimeType);
+    const isWordDoc = fileExtension === '.docx';
     
     const FILE_READ_TIMEOUT = 30000; // 30 seconds timeout for file operations
     
@@ -307,6 +309,49 @@ export async function readFileFromDisk(filePath: string, offset: number = 0, len
             const content = buffer.toString('base64');
             
             return { content, mimeType, isImage };
+        } else if (isWordDoc) {
+            // For Word documents, extract text using mammoth
+            try {
+                const result = await mammoth.extractRawText({ path: validPath });
+                let content = result.value;
+                
+                // Apply line-based offset and length for Word documents
+                if (offset > 0 || length < Number.MAX_SAFE_INTEGER) {
+                    const lines = content.split('\n');
+                    const totalLines = lines.length;
+                    
+                    let startLine = Math.min(offset, totalLines);
+                    let endLine = Math.min(startLine + length, totalLines);
+                    
+                    // If reading beyond end, show last few lines instead
+                    if (startLine === totalLines && offset > 0 && length < Number.MAX_SAFE_INTEGER) {
+                        const lastLinesCount = Math.min(10, totalLines);
+                        startLine = Math.max(0, totalLines - lastLinesCount);
+                        endLine = totalLines;
+                    }
+                    
+                    const selectedLines = lines.slice(startLine, endLine);
+                    const truncatedContent = selectedLines.join('\n');
+                    
+                    // Add informational message if truncated
+                    const isEntireFileRead = offset === 0 && length >= Number.MAX_SAFE_INTEGER;
+                    if (!isEntireFileRead) {
+                        if (offset >= totalLines && totalLines > 0) {
+                            content = `[NOTICE: Offset ${offset} exceeds document length (${totalLines} lines). Showing last ${endLine - startLine} lines instead.]\n\n${truncatedContent}`;
+                        } else if (offset > 0 || endLine < totalLines) {
+                            content = `[Reading ${endLine - startLine} lines from line ${startLine} of ${totalLines} total lines from Word document]\n\n${truncatedContent}`;
+                        } else {
+                            content = truncatedContent;
+                        }
+                    } else {
+                        content = truncatedContent;
+                    }
+                }
+                
+                return { content, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', isImage: false };
+            } catch (error) {
+                throw new Error(`Failed to read Word document: ${error instanceof Error ? error.message : String(error)}`);
+            }
         } else {
             // For all other files, try to read as UTF-8 text with line-based offset and length
             try {

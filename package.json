@@ -1,6 +1,7 @@
 {
-  "name": "@wonderwhy-er/desktop-commander",
-  "version": "0.2.1",
+  "name": "@yourusername/desktop-commander-custom",
+  "version": "1.0.0",
+  "private": true,
   "description": "MCP server for terminal operations and file editing",
   "license": "MIT",
   "author": "Eduards Ruzga",
@@ -41,7 +42,7 @@
     "logs:export": "npm run build && node scripts/export-fuzzy-logs.js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   },
   "keywords": [
     "mcp",
@@ -68,6 +69,7 @@
     "cross-fetch": "^4.1.0",
     "fastest-levenshtein": "^1.0.16",
     "glob": "^10.3.10",
+    "mammoth": "^1.8.0",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.23.5"
   },

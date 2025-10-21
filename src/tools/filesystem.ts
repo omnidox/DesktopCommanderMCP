@@ -5,6 +5,7 @@ import fetch from 'cross-fetch';
 import { createReadStream } from 'fs';
 import { createInterface } from 'readline';
 import { isBinaryFile } from 'isbinaryfile';
+import mammoth from 'mammoth';
 import {capture} from '../utils/capture.js';
 import {withTimeout} from '../utils/withTimeout.js';
 import {configManager} from '../config-manager.js';
@@ -677,7 +678,8 @@ export async function readFileFromDisk(filePath: string, offset: number = 0, len
 
     // Detect the MIME type based on file extension
     const { mimeType, isImage } = await getMimeTypeInfo(validPath);
-    
+    const isWordDoc = fileExtension === '.docx';
+
     // Use withTimeout to handle potential hangs
     const readOperation = async () => {
         if (isImage) {
@@ -687,6 +689,34 @@ export async function readFileFromDisk(filePath: string, offset: number = 0, len
             const content = buffer.toString('base64');
 
             return { content, mimeType, isImage };
+        } else if (isWordDoc) {
+            // For Word documents, extract text using mammoth
+            try {
+                const result = await mammoth.extractRawText({ path: validPath });
+                let content = result.value;
+
+                // Apply line-based offset and length for Word documents
+                if (offset > 0 || length < Number.MAX_SAFE_INTEGER) {
+                    const lines = content.split('\n');
+                    const totalLines = lines.length;
+
+                    // Handle negative offset (read from end)
+                    let startLine = offset >= 0 ? offset : Math.max(0, totalLines + offset);
+                    const endLine = Math.min(startLine + length, totalLines);
+
+                    content = lines.slice(startLine, endLine).join('\n');
+
+                    // Add informational message if content was paginated
+                    if (startLine > 0 || endLine < totalLines) {
+                        content += `\n\n[Showing lines ${startLine + 1}-${endLine} of ${totalLines} total lines from Word document]`;
+                    }
+                }
+
+                return { content, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', isImage: false };
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to read Word document: ${errorMessage}`);
+            }
         } else {
             // For all other files, use smart positioning approach
             try {
